@@ -21,6 +21,9 @@ class Server:
 
     def _match_route(self):
         return f'{self.base_url}/match'
+    
+    def _user_route(self):
+        return f'{self.base_url}/user'
 
     def _handle_response(self, response: requests.Response):
         try:
@@ -29,6 +32,15 @@ class Server:
         except requests.exceptions.HTTPError as err:
             print(f"Error: {response.status_code}. {err}")
             return None
+        
+# 
+# 
+# 
+
+    def get_user_matches(self):
+        url = f'{self._match_route()}/user'
+        response = requests.get(url, headers=self.headers)
+        return self._handle_response(response)
 
     def get_match(self, id):
         """

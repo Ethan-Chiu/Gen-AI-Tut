@@ -6,6 +6,11 @@ class Manager:
         self.server = server
         self.current_match_id = None
 
+    def get_match_list(self):
+        matches = self.server.get_user_matches()
+        matches = [Match.from_json(match) for match in matches]
+        return matches
+
     def set_current_match(self, match_id):
         self.current_match_id = match_id
 
