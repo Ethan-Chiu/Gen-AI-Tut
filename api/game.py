@@ -2,7 +2,18 @@ import time
 from .server import Server
 from .manager import Manager
 
-
+def validate_chain(multi_prompt_chain,memory):
+    try:
+        response = multi_prompt_chain.invoke({"input":"test"})
+    except:
+        print("Can't invoke multi_prompt_chain")
+        return False
+    try:
+        history = memory.load_memory_variables
+    except:
+        print("Can't load memory")
+        return False
+    return True
 class Game:
     def __init__(self, server: Server, chain, memory):
         self.server: Server = server
