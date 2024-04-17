@@ -122,12 +122,19 @@ def show_result(server: Server):
             print(f"Your match {match.name} is graded")
             match_info_data = server.get_match_info(match.id)
             match_info = MatchInfo.from_json(match_info_data)
-            winnerId = match_info.result.winnerId
+            result = match_info.result
+            winnerId = result.winnerId
+            
             if (winnerId == userId):
-                print("You win!")
+                print(f"You win!")
             else:
                 print("You lose!")
             
+            for point in result.points:
+                if point.userId == userId:
+                    print(f"You got {point.point} point")
+                    break
+
             print("\n\nGrading info:")
             print(match_info.result.comment)
             print("-" * 80 + "\n\n")
