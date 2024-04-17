@@ -1,4 +1,4 @@
-from .models import Match
+from .models import Match, MatchInfo
 from .server import Server
 
 class Manager:
@@ -10,6 +10,14 @@ class Manager:
         matches = self.server.get_user_matches()
         matches = [Match.from_json(match) for match in matches]
         return matches
+    
+    def get_match_info(self) -> MatchInfo:
+        if self.current_match_id is None:
+            print("No current match ID set. Use set_current_match() first.")
+            return
+
+        match_info_data = self.server.get_match_info(self.current_match_id)
+        return MatchInfo.from_json(match_info_data)
 
     def set_current_match(self, match_id):
         self.current_match_id = match_id
@@ -23,6 +31,8 @@ class Manager:
             print("Failed to get current match.")
             return None
         
+    def get_inst(self, order):
+        return self.server.get_match_inst(self.current_match_id, order).get("input")
 
     def send_message(self, message):
         if self.current_match_id is None:

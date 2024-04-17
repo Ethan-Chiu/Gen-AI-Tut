@@ -37,8 +37,22 @@ class Server:
 # 
 # 
 
+    def set_username(self, name):
+        url = f'{self._user_route()}/rename/'
+        data = {
+            'name': name
+        }
+        response = requests.post(url, json=data, headers=self.headers)
+        return self._handle_response(response)
+
+
     def get_user_matches(self):
         url = f'{self._match_route()}/user'
+        response = requests.get(url, headers=self.headers)
+        return self._handle_response(response)
+    
+    def get_match_info(self, id):
+        url = f'{self._match_route()}/info/{id}'
         response = requests.get(url, headers=self.headers)
         return self._handle_response(response)
 
@@ -51,6 +65,14 @@ class Server:
         """
         url = f'{self._match_route()}/{id}'
         response = requests.get(url, headers=self.headers)
+        return self._handle_response(response)
+
+    def get_match_inst(self, id, order):
+        url = f'{self._match_route()}/inst/{id}'
+        data = {
+            'order': order
+        }
+        response = requests.get(url, json=data, headers=self.headers)
         return self._handle_response(response)
 
     def send_message(self, match_id: str, message: str):
