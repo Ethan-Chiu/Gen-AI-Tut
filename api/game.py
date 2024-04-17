@@ -1,6 +1,7 @@
 import time
 from .server import Server
 from .manager import Manager
+from .models import MatchInfo
 
 def validate_chain(multi_prompt_chain,memory):
     try:
@@ -14,6 +15,8 @@ def validate_chain(multi_prompt_chain,memory):
         print("Can't load memory")
         return False
     return True
+
+
 class Game:
     def __init__(self, server: Server, chain, memory):
         self.server: Server = server
@@ -30,8 +33,10 @@ class Game:
         for match in matches:
             print(match)
 
-        current_match_id = matches[0].id
-        if len(matches) != 1:
+        on_going_matches = [ match for match in matches if match.match_status == "STARTED"]
+
+        current_match_id = on_going_matches[0].id
+        if len(on_going_matches) != 1:
             current_match_id = input("Enter the ID of the match you want to join: ")
         self.manager.set_current_match(current_match_id)
 
@@ -65,7 +70,6 @@ class Game:
                 local_match_progress += 1
 
                 if local_match_progress == 4:
-                    print("End")
                     break
 
                 # push
@@ -85,7 +89,6 @@ class Game:
                 local_match_progress += 1
 
                 if local_match_progress == 4:
-                    print("End")
                     break
 
                 # respond
@@ -102,7 +105,30 @@ class Game:
                 self.manager.send_message(answer)
 
                 if local_match_progress == 4:
-                    print("Match over")
                     break
 
             time.sleep(5)
+
+        self.manager.end_match()
+        print("Match over")
+
+
+def show_result(server: Server):
+    manager = Manager(server)
+    userId = server.get_user().get("id")
+    user_matches = manager.get_match_list()
+    for match in user_matches:
+        if match.match_status == "GRADED":
+            print(f"Your match {match.name} is graded")
+            match_info_data = server.get_match_info(match.id)
+            match_info = MatchInfo.from_json(match_info_data)
+            winnerId = match_info.result.winnerId
+            if (winnerId == userId):
+                print("You win!")
+            else:
+                print("You lose!")
+            
+            print("\n\nGrading info:")
+            print(match_info.result.comment)
+            print("-" * 80 + "\n\n")
+

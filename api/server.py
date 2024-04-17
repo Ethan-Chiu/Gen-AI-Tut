@@ -37,6 +37,11 @@ class Server:
 # 
 # 
 
+    def get_user(self):
+        url = f'{self._user_route()}'
+        response = requests.get(url, headers=self.headers)
+        return self._handle_response(response)
+    
     def set_username(self, name):
         url = f'{self._user_route()}/rename/'
         data = {
@@ -84,3 +89,10 @@ class Server:
         response = requests.post(url, json=data, headers=self.headers)
         return self._handle_response(response)
 
+    def end_match(self, match_id):
+        url = f'{self._match_route()}/end'
+        data = {
+            'matchId': match_id,
+        }
+        response = requests.post(url, json=data, headers=self.headers)
+        return self._handle_response(response)
