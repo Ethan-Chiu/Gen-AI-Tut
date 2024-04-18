@@ -34,7 +34,7 @@ class MatchInfo:
         self.players = players
         self.topic: Topic = topic
         self.is_first = is_first
-        self.result: Result = result
+        self.result: Result | None = result
 
     @classmethod
     def from_json(cls, json_data):
@@ -44,7 +44,7 @@ class MatchInfo:
         players = [Player.from_json(player_data) for player_data in json_data.get('players', [])]
         topic = Topic.from_json(json_data.get('topic'))
         is_first = json_data.get('isFirst')
-        result = Result.from_json(json_data.get('result'))
+        result = Result.from_json(json_data.get('result')) if json_data.get('result') else None
         return cls(match_id, name, topic_id, players, topic, is_first, result)
 
     def __str__(self):

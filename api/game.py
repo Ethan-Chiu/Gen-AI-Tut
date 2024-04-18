@@ -38,6 +38,7 @@ class Game:
         current_match_id = on_going_matches[0].id
         if len(on_going_matches) != 1:
             current_match_id = input("Enter the ID of the match you want to join: ")
+        print(f"Enter match: (ID: {current_match_id})")
         self.manager.set_current_match(current_match_id)
 
     def start(self):
