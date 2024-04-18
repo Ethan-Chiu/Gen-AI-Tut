@@ -34,6 +34,9 @@ class Game:
             print(match)
 
         on_going_matches = [ match for match in matches if match.match_status == "START"]
+        if len(on_going_matches) == 0:
+            print("No on going matches")
+            return
 
         current_match_id = on_going_matches[0].id
         if len(on_going_matches) != 1:
