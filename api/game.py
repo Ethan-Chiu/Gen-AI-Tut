@@ -70,11 +70,10 @@ class Game:
                 self.memory.save_context(current_input, {"output": answer})
                 local_match_progress += 1
 
-                if local_match_progress == 4:
-                    break
-
                 # push
                 self.manager.send_message(answer)
+
+                continue
 
             # lag behind remote history: sync with server
             if local_match_progress < len(match.history_msgs):
@@ -94,7 +93,7 @@ class Game:
 
                 # respond
                 current_input = {"input": self.manager.get_inst(local_match_progress)}
-                response = self.chain.invoke({"input": current_input})
+                response = self.chain.invoke(current_input)
                 answer = response.get("answer")
 
                 # save
