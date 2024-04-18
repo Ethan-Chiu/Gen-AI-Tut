@@ -46,5 +46,5 @@ class Manager:
             print("Failed to send message.")
     
     def end_match(self):
-        self.current_match_id = None
         response = self.server.end_match(self.current_match_id)
+        self.current_match_id = None
