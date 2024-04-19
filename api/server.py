@@ -1,4 +1,5 @@
 import requests
+from requests.adapters import HTTPAdapter, Retry
 
 class Server:
     '''
@@ -13,11 +14,15 @@ class Server:
     def __init__(self, base_url, token):
         self.base_url = base_url
         self.token = token
-        self.headers = {'Authorization': f'Bearer {token}'}
+        self.session = requests.Session()
+        self.session.headers = {'Authorization': f'Bearer {token}'}
+        self.retries = Retry(total=5,backoff_factor=2)
+        self.session.mount('https://', HTTPAdapter(max_retries=self.retries))
+
 
     def set_token(self, token):
         self.token = token
-        self.headers = {'Authorization': f'Bearer {token}'}
+        self.session.headers = {'Authorization': f'Bearer {token}'}
 
     def _match_route(self):
         return f'{self.base_url}/match'
@@ -39,7 +44,7 @@ class Server:
 
     def get_user(self):
         url = f'{self._user_route()}'
-        response = requests.get(url, headers=self.headers)
+        response = self.session.get(url)
         return self._handle_response(response)
     
     def set_username(self, name):
@@ -47,18 +52,18 @@ class Server:
         data = {
             'name': name
         }
-        response = requests.post(url, json=data, headers=self.headers)
+        response = self.session.post(url, json=data)
         return self._handle_response(response)
 
 
     def get_user_matches(self):
         url = f'{self._match_route()}/user'
-        response = requests.get(url, headers=self.headers)
+        response = self.session.get(url)
         return self._handle_response(response)
     
     def get_match_info(self, id):
         url = f'{self._match_route()}/info/{id}'
-        response = requests.get(url, headers=self.headers)
+        response = self.session.get(url)
         return self._handle_response(response)
 
     def get_match(self, id):
@@ -69,7 +74,7 @@ class Server:
         :return: The match data.
         """
         url = f'{self._match_route()}/{id}'
-        response = requests.get(url, headers=self.headers)
+        response = self.session.get(url)
         return self._handle_response(response)
 
     def get_match_inst(self, id, order):
@@ -77,7 +82,7 @@ class Server:
         data = {
             'order': order
         }
-        response = requests.get(url, json=data, headers=self.headers)
+        response = self.session.get(url, json=data)
         return self._handle_response(response)
 
     def send_message(self, match_id: str, message: str):
@@ -86,7 +91,7 @@ class Server:
             'matchId': match_id,
             'message': message
         }
-        response = requests.post(url, json=data, headers=self.headers)
+        response = self.session.post(url, json=data)
         return self._handle_response(response)
 
     def end_match(self, match_id):
@@ -94,5 +99,5 @@ class Server:
         data = {
             'matchId': match_id,
         }
-        response = requests.post(url, json=data, headers=self.headers)
+        response = self.session.post(url, json=data)
         return self._handle_response(response)
