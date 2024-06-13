@@ -62,10 +62,10 @@ class Game:
         print(f"Match cancelled {res}")
 
     def select_match(self):
-        print("All matches:")
         matches = self.manager.get_match_list()
-        for match in matches:
-            print(match)
+        # print("All matches:")
+        # for match in matches:
+        #     print(match)
 
         on_going_matches = [ match for match in matches if match.match_status == "START"]
         if len(on_going_matches) == 0:
