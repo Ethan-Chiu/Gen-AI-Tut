@@ -49,6 +49,9 @@ class Game:
         # Start the game
         self.start()
             
+    def cancel_match(self):
+        res = self.server.cancel_match()
+        print(f"Match cancelled {res}")
 
     def select_match(self):
         print("All matches:")
