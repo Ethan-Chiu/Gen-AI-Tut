@@ -10,7 +10,7 @@ class Match:
         self.topic_id = topic_id
         self.match_status = match_status
         self.players = players
-        self.history_msgs = history_msgs
+        self.history_msgs: list[HistoryMessage] = history_msgs
 
     @classmethod
     def from_json(cls, json_data):
@@ -31,7 +31,7 @@ class MatchInfo:
         self.id = match_id
         self.name = name
         self.topic_id = topic_id
-        self.players = players
+        self.players: list[Player] = players
         self.topic: Topic = topic
         self.is_first = is_first
         self.result: Result | None = result

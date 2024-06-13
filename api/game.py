@@ -2,6 +2,7 @@ import time
 from .server import Server
 from .manager import Manager
 from .models import MatchInfo
+from datetime import timezone, datetime, timedelta
 
 def validate_chain(multi_prompt_chain,memory):
     try:
@@ -18,6 +19,13 @@ def validate_chain(multi_prompt_chain,memory):
         return False
     return True
 
+
+def time_ago(last_time):
+    if last_time is None:
+        return None
+    now = datetime.now(timezone.utc)
+    delta = now - last_time
+    return delta
 
 class Game:
     def __init__(self, server: Server, chain, memory):
@@ -71,6 +79,7 @@ class Game:
         self.manager.set_current_match(current_match_id)
         return True
 
+
     def start(self):
 
         local_progress = 0
@@ -83,9 +92,19 @@ class Game:
         first = info.is_first
         print("Your turn first" if first else "Opponent's turn first")
 
+        userId = self.server.get_user().get("id")
+        opponentId = [player.player_id for player in info.players if player.player_id != userId]
+        if len(opponentId) != 1:
+            print(f"Error: Opponent count: {len(opponentId)}")
+            return
+        opponentId = opponentId[0]
+        print("Opponent ID:", opponentId)
+
+        last_time_opp_respond = None
+
         while True:
             match = self.manager.get_current_match()
-    
+
             # Sync with server
             game_progress = len(match.history_msgs)
             while local_progress < game_progress:
@@ -104,6 +123,30 @@ class Game:
             if local_progress == 4:
                 break
 
+            # Get opponent last response time
+            # Initialize opponent last response time
+            if last_time_opp_respond is None:
+                last_time_opp_respond = datetime.now(timezone.utc)
+
+            last_time = None
+            time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
+            for message in match.history_msgs:
+                if message.user_id == opponentId:
+                    message_time = datetime.strptime(message.created_at, time_format)
+                    message_time = message_time.replace(tzinfo=timezone.utc)
+                    if last_time is None or message_time > last_time:
+                        last_time = message_time
+            if last_time is not None:
+                last_time_opp_respond = last_time
+            
+            delta = time_ago(last_time_opp_respond)
+            print(f"Opponent respond {delta} seconds ago")
+            if delta > timedelta(seconds=90):
+                print("The last opponent message was more than 90 seconds ago.")
+                self.server.overtime()
+                return
+            
+            # Respond 
             my_turn = (first and local_progress % 2 == 0) or (not first and local_progress % 2 == 1)
             
             if my_turn:
@@ -129,7 +172,7 @@ class Game:
             if local_progress == 4:
                 break
 
-            time.sleep(5)
+            time.sleep(10)
 
         self.manager.end_match()
         print("Match over")

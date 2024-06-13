@@ -75,6 +75,11 @@ class Server:
         response = self.session.delete(url)
         return self._handle_response(response)
     
+    def overtime(self):
+        url = f'{self._match_route()}/opp_overtime'
+        response = self.session.post(url)
+        return self._handle_response(response)
+    
     def get_user_matches(self):
         url = f'{self._match_route()}/user'
         response = self.session.get(url)
