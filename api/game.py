@@ -6,13 +6,15 @@ from .models import MatchInfo
 def validate_chain(multi_prompt_chain,memory):
     try:
         response = multi_prompt_chain.invoke({"input":"test"})
-    except:
+    except Exception as e:
         print("Can't invoke multi_prompt_chain")
+        print(f"Error: {e}")
         return False
     try:
         history = memory.load_memory_variables
-    except:
+    except Exception as e:
         print("Can't load memory")
+        print(f"Error: {e}")
         return False
     return True
 
@@ -27,6 +29,27 @@ class Game:
     def set_username(self, name):
         self.server.set_username(name)
 
+    def join_match(self):
+        res = self.server.join_match()
+        if res is None:
+            return 
+        print(res.get("message"))
+        
+        try: 
+            # Wait for the match to start
+            while True:
+                time.sleep(5)
+                found = self.select_match()
+                if found:
+                    break
+        except Exception as e:
+            print(f"Error: {e}")
+            self.server.cancel_match()
+
+        # Start the game
+        self.start()
+            
+
     def select_match(self):
         print("All matches:")
         matches = self.manager.get_match_list()
@@ -35,18 +58,19 @@ class Game:
 
         on_going_matches = [ match for match in matches if match.match_status == "START"]
         if len(on_going_matches) == 0:
-            print("No on going matches")
-            return
+            print("No on going matches, waiting...")
+            return False
 
         current_match_id = on_going_matches[0].id
         if len(on_going_matches) != 1:
             current_match_id = input("Enter the ID of the match you want to join: ")
         print(f"Enter match: (ID: {current_match_id})")
         self.manager.set_current_match(current_match_id)
+        return True
 
     def start(self):
 
-        local_match_progress = 0
+        local_progress = 0
         self.memory.clear()
 
         info = self.manager.get_match_info()
@@ -57,13 +81,26 @@ class Game:
         print("Your turn first" if first else "Opponent's turn first")
 
         while True:
-
             match = self.manager.get_current_match()
+    
+            # Sync with server
+            game_progress = len(match.history_msgs)
+            while local_progress < game_progress:
+                new_messages = match.history_msgs[local_progress]
+                print(new_messages.text)
 
-            # init
-            if local_match_progress == 0 and first:
+                current_input = {"input": self.manager.get_inst(local_progress)}
+                self.memory.save_context(current_input, {"output": new_messages.text})
+                local_progress += 1
+
+            if local_progress == 4:
+                break
+
+            my_turn = (first and local_progress % 2 == 0) or (not first and local_progress % 2 == 1)
+            
+            if my_turn:
                 # respond
-                current_input = {"input": self.manager.get_inst(local_match_progress)}
+                current_input = {"input": self.manager.get_inst(local_progress)}
                 print("current_input", current_input)
                 response = self.chain.invoke(current_input)
                 answer = response.get("answer")
@@ -71,44 +108,13 @@ class Game:
                 # save
                 print(answer)
                 self.memory.save_context(current_input, {"output": answer})
-                local_match_progress += 1
+                local_progress += 1
 
                 # push
                 self.manager.send_message(answer)
 
-                continue
-
-            # lag behind remote history: sync with server
-            if local_match_progress < len(match.history_msgs):
-                assert local_match_progress == len(match.history_msgs) - 1
-
-                # pull
-                new_messages = match.history_msgs[local_match_progress]
-                print(new_messages.text)
-
-                # save
-                current_input = {"input": self.manager.get_inst(local_match_progress)}
-                self.memory.save_context(current_input, {"output": new_messages.text})
-                local_match_progress += 1
-
-                if local_match_progress == 4:
-                    break
-
-                # respond
-                current_input = {"input": self.manager.get_inst(local_match_progress)}
-                response = self.chain.invoke(current_input)
-                answer = response.get("answer")
-
-                # save
-                print(answer)
-                self.memory.save_context(current_input, {"output": answer})
-                local_match_progress += 1
-
-                # push
-                self.manager.send_message(answer)
-
-                if local_match_progress == 4:
-                    break
+            if local_progress == 4:
+                break
 
             time.sleep(5)
 

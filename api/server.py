@@ -39,7 +39,7 @@ class Server:
             return None
         
 # 
-# 
+# User
 # 
 
     def get_user(self):
@@ -55,7 +55,20 @@ class Server:
         response = self.session.post(url, json=data)
         return self._handle_response(response)
 
+#
+# Matches
+#
 
+    def join_match(self):
+        url = f'{self._match_route()}/join'
+        response = self.session.post(url)
+        return self._handle_response(response)
+    
+    def cancel_match(self):
+        url = f'{self._match_route()}/cancel'
+        response = self.session.delete(url)
+        return self._handle_response(response)
+    
     def get_user_matches(self):
         url = f'{self._match_route()}/user'
         response = self.session.get(url)
