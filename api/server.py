@@ -33,9 +33,15 @@ class Server:
     def _handle_response(self, response: requests.Response):
         try:
             response.raise_for_status()
+            if not response.content or response.content in [b'', b'null']:
+                return None
             return response.json()
         except requests.exceptions.HTTPError as err:
             print(f"Error: {response.status_code}. {err}")
+            return None
+        except ValueError as err:
+            # Handle JSON decode error
+            print(f"JSON decode error: {err}")
             return None
         
 # 

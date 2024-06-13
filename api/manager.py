@@ -32,7 +32,11 @@ class Manager:
             return None
         
     def get_inst(self, order):
-        return self.server.get_match_inst(self.current_match_id, order).get("input")
+        inst = self.server.get_match_inst(self.current_match_id, order)
+        if inst is None:
+            print("Failed to get instruction.")
+            return None
+        return inst.get("input")
 
     def send_message(self, message):
         if self.current_match_id is None:

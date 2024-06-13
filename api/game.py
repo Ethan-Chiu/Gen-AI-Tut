@@ -89,7 +89,12 @@ class Game:
                 new_messages = match.history_msgs[local_progress]
                 print(new_messages.text)
 
-                current_input = {"input": self.manager.get_inst(local_progress)}
+                instruction = self.manager.get_inst(local_progress)
+                if instruction is None:
+                    print("Stop game: Failed to get instruction.")
+                    return
+                
+                current_input = {"input": instruction}
                 self.memory.save_context(current_input, {"output": new_messages.text})
                 local_progress += 1
 
@@ -100,7 +105,12 @@ class Game:
             
             if my_turn:
                 # respond
-                current_input = {"input": self.manager.get_inst(local_progress)}
+                instruction = self.manager.get_inst(local_progress)
+                if instruction is None:
+                    print("Stop game: Failed to get instruction.")
+                    return
+                
+                current_input = {"input": instruction}
                 print("current_input", current_input)
                 response = self.chain.invoke(current_input)
                 answer = response.get("answer")
